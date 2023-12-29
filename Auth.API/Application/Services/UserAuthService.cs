@@ -62,7 +62,16 @@ namespace Auth.API.Application.Services
                 var usrroles = await _usrmgr.GetRolesAsync(userexists);
                 //Token
                 var tokendetails = GenerateJWTAuthToken(userexists,usrroles);
-                return (true, tokendetails, null, "User Logged In");
+
+                AuthenticatedUser authenticateduser = new AuthenticatedUser 
+                { 
+                    AuthToken=tokendetails,
+                    EmailID=userObj.EmailID,
+                    FirstName = userexists.FirstName, 
+                    LastName = userexists.LastName
+                };
+
+                return (true, authenticateduser, null, "User Logged In");
             }
             return (false, null, null, "UnAuthorized User");
         }
@@ -113,11 +122,12 @@ namespace Auth.API.Application.Services
                 //List Claims for Token
                 List<Claim> claims = new List<Claim>() 
                 {
-                    new Claim(ClaimTypes.Name,user.UserName),
-                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(ClaimTypes.Name,user.FirstName),
+                    new Claim(ClaimTypes.Email, user.Email!),
                     new Claim(ClaimTypes.NameIdentifier,user.Id),
-                    new Claim(JwtRegisteredClaimNames.Email,user.Email),
-                    new Claim(JwtRegisteredClaimNames.Sub,user.Email),
+                    new Claim(ClaimTypes.Surname,user.LastName),
+                    new Claim(JwtRegisteredClaimNames.Email,user.Email!),
+                    new Claim(JwtRegisteredClaimNames.Sub,user.Email!),
                     new Claim(JwtRegisteredClaimNames.Jti,Guid.NewGuid().ToString())
                 };
 

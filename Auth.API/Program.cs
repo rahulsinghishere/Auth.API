@@ -33,34 +33,30 @@ namespace Auth.API
                 opts.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 opts.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 opts.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddGoogle(gopts =>
+            }).AddJwtBearer(opts =>
+                {
+
+                    opts.SaveToken = true;
+                    opts.RequireHttpsMetadata = false;
+                    //opts.Authority = builder.Configuration["JWT:Issuer"];
+                    opts.TokenValidationParameters = new TokenValidationParameters()
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["JWT:SecretKey"])),
+
+                        ValidateAudience = true,
+                        ValidAudience = builder.Configuration["JWT:Audience"],
+
+                        ValidateIssuer = true,
+                        ValidIssuer = builder.Configuration["JWT:Issuer"]
+                    };
+                    //opts.Configuration = new OpenIdConnectConfiguration();
+                }
+            );
+            builder.Services.AddControllers().AddJsonOptions(opts =>
             {
-                gopts.ClientId = builder.Configuration["ExternalAuthentication:Google:ClientId"];
-                gopts.ClientSecret = builder.Configuration["ExternalAuthentication:Google:ClientSecret"];
+                opts.JsonSerializerOptions.PropertyNamingPolicy = null;
             });
-
-                //.AddJwtBearer(opts => 
-                //{
-                    
-                //    opts.SaveToken = true;
-                //    opts.RequireHttpsMetadata = false;
-                //    opts.Authority = builder.Configuration["JWT:Issuer"];
-                //    opts.TokenValidationParameters = new TokenValidationParameters()
-                //    {
-                //        ValidateIssuerSigningKey = true,
-                //        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["JWT:SecretKey"])),
-
-                //        ValidateAudience = true,
-                //        ValidAudience = builder.Configuration["JWT:Audience"],
-
-                //        ValidateIssuer = true,
-                //        ValidIssuer = builder.Configuration["JWT:Issuer"]
-                //    };
-                //    opts.Configuration = new OpenIdConnectConfiguration();
-                //}
-                //);
-
-            builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -78,6 +74,12 @@ namespace Auth.API
 
             app.UseAuthorization();
 
+            app.UseCors(policyopts =>
+            {
+                policyopts.AllowAnyOrigin();
+                policyopts.AllowAnyHeader();
+                policyopts.AllowAnyMethod();
+            });
 
             app.MapControllers();
 
